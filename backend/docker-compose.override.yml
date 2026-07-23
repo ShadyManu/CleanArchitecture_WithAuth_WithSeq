@@ -1,0 +1,50 @@
+services:
+  web:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "5000"
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=CCTemplate;Username=postgres;Password=ChangeMe123!
+      Database__ApplyMigration: "true"
+      Database__SeedData: "false"
+      Database__DatabaseProvider: PostgreSQL
+      Jwt__Issuer: CCTemplate
+      Jwt__Audience: CCTemplate.Client
+      Jwt__SigningKey: FAKE-DEVELOPMENT-SIGNING-KEY-DO-NOT-USE
+      Jwt__AccessTokenMinutes: "15"
+      Jwt__RefreshTokenDays: "60"
+      Jwt__RefreshTokenBytes: "64"
+      Jwt__RefreshTokenHmacKey: FAKE-DEVELOPMENT-REFRESH-HMAC-KEY-DO-NOT-USE
+      Jwt__ProviderTokenEncryptionKey: RkFLRS1URVNULUVOQ1JZUFRJT04tS0VZLTMyQllURVM=
+      Authentication__Google__ClientIds__0: fake-google-client-id-for-local-development
+      Authentication__Apple__Audience: fake.apple.client.id.for.local.development
+      Authentication__Apple__TeamId: FAKETEAMID
+      Authentication__Apple__KeyId: FAKEKEYID
+      Authentication__Apple__PrivateKey: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgCwfi5v6AYwWwVYBqYTBv70Yfsbc8iNCgwzyHYd/Ycd2hRANCAARur4U/5TBXG6TPxmQLhZ4RadtnNe87w2ElVB6vkGNekGQqr1e5Yylea4z/9ufOrVGlR7+Q6Z9f/tiwf0CGiWMv
+      Seq__ServerUrl: http://seq:5341
+      Logging__LogLevel__Default: Information
+      Logging__LogLevel__Microsoft: Warning
+      Logging__LogLevel__Microsoft.AspNetCore.SpaProxy: Information
+      Logging__LogLevel__Microsoft.Hosting.Lifetime: Information
+      OpenTelemetry__OtlpEndpoint: http://seq:5341/ingest/otlp
+      OpenTelemetry__OtlpProtocol: HttpProtobuf
+    ports:
+      - "5000:5000"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  db:
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ChangeMe123!
+      POSTGRES_DB: cctemplate
+    ports:
+      - "5432:5432"
+
+  seq:
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_ADMINPASSWORD: ChangeMe123!
+    ports:
+      - "5341:5341"
+      - "8081:80"

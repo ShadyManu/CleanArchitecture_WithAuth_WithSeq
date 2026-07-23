@@ -1,0 +1,511 @@
+{
+  "info": {
+    "_postman_id": "1a4abb4f-1d6d-4c52-b246-e5da7ab2a132",
+    "name": "CCTemplate API",
+    "description": "Clean Architecture template API collection. Configure the provider token variables, run a sign-in request, and the collection will automatically persist userId, accessToken and refreshToken for the authenticated requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "28028715"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication lifecycle. Google is provider 0 and Apple is provider 1.",
+      "item": [
+        {
+          "name": "Sign in - Google",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Request succeeded\", () => pm.response.to.be.success);",
+                  "",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Result contains authentication data\", () => {",
+                  "    pm.expect(result.error).to.eql(null);",
+                  "    pm.expect(result.data).to.be.an(\"object\");",
+                  "    pm.expect(result.data.accessToken).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(result.data.refreshToken).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "if (result.data) {",
+                  "    pm.collectionVariables.set(\"userId\", result.data.userId);",
+                  "    pm.collectionVariables.set(\"accessToken\", result.data.accessToken);",
+                  "    pm.collectionVariables.set(\"accessTokenExpiresInSeconds\", result.data.expiresInSeconds);",
+                  "    pm.collectionVariables.set(\"refreshToken\", result.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": 0,\n  \"idToken\": \"{{googleIdToken}}\",\n  \"authorizationCode\": null,\n  \"deviceId\": \"{{deviceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/auth/sign-in",
+            "description": "Validates a Google ID token. On success, saves userId, accessToken and refreshToken as collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Sign in - Apple",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Request succeeded\", () => pm.response.to.be.success);",
+                  "",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Result contains authentication data\", () => {",
+                  "    pm.expect(result.error).to.eql(null);",
+                  "    pm.expect(result.data).to.be.an(\"object\");",
+                  "    pm.expect(result.data.accessToken).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(result.data.refreshToken).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "if (result.data) {",
+                  "    pm.collectionVariables.set(\"userId\", result.data.userId);",
+                  "    pm.collectionVariables.set(\"accessToken\", result.data.accessToken);",
+                  "    pm.collectionVariables.set(\"accessTokenExpiresInSeconds\", result.data.expiresInSeconds);",
+                  "    pm.collectionVariables.set(\"refreshToken\", result.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": 1,\n  \"idToken\": \"{{appleIdToken}}\",\n  \"authorizationCode\": \"{{appleAuthorizationCode}}\",\n  \"deviceId\": \"{{deviceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/auth/sign-in",
+            "description": "Validates an Apple ID token and exchanges the single-use authorization code. On success, saves the application tokens."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh token",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set(\"previousRefreshToken\", pm.collectionVariables.get(\"refreshToken\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Request succeeded\", () => pm.response.to.be.success);",
+                  "",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Refresh token was rotated\", () => {",
+                  "    pm.expect(result.error).to.eql(null);",
+                  "    pm.expect(result.data).to.be.an(\"object\");",
+                  "    pm.expect(result.data.accessToken).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(result.data.refreshToken).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(result.data.refreshToken).to.not.eql(pm.variables.get(\"previousRefreshToken\"));",
+                  "});",
+                  "",
+                  "if (result.data) {",
+                  "    pm.collectionVariables.set(\"userId\", result.data.userId);",
+                  "    pm.collectionVariables.set(\"accessToken\", result.data.accessToken);",
+                  "    pm.collectionVariables.set(\"accessTokenExpiresInSeconds\", result.data.expiresInSeconds);",
+                  "    pm.collectionVariables.set(\"refreshToken\", result.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"deviceId\": \"{{deviceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/auth/refresh-token",
+            "description": "Rotates the current refresh token and replaces both saved token variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Request succeeded\", () => pm.response.to.be.success);",
+                  "",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Session was revoked\", () => {",
+                  "    pm.expect(result.error).to.eql(null);",
+                  "    pm.expect(result.data).to.eql(true);",
+                  "});",
+                  "",
+                  "if (result.data === true) {",
+                  "    pm.collectionVariables.unset(\"accessToken\");",
+                  "    pm.collectionVariables.unset(\"accessTokenExpiresInSeconds\");",
+                  "    pm.collectionVariables.unset(\"refreshToken\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"deviceId\": \"{{deviceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/auth/logout",
+            "description": "Requires the saved bearer token. Revokes only the refresh-token session for this device and clears the local saved tokens. The stateless access token remains valid server-side until it expires."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout all sessions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Request succeeded\", () => pm.response.to.be.success);",
+                  "",
+                  "const result = pm.response.json();",
+                  "pm.test(\"All sessions were revoked\", () => {",
+                  "    pm.expect(result.error).to.eql(null);",
+                  "    pm.expect(result.data).to.eql(true);",
+                  "});",
+                  "",
+                  "if (result.data === true) {",
+                  "    pm.collectionVariables.unset(\"accessToken\");",
+                  "    pm.collectionVariables.unset(\"accessTokenExpiresInSeconds\");",
+                  "    pm.collectionVariables.unset(\"refreshToken\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseURL}}/auth/logout-all",
+            "description": "Requires the saved bearer token. Revokes every refresh-token session for the authenticated user and clears the current client's saved tokens. Existing stateless access tokens remain valid until they expire."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Request succeeded\", () => pm.response.to.be.success);",
+                  "",
+                  "const result = pm.response.json();",
+                  "pm.test(\"User was deleted\", () => {",
+                  "    pm.expect(result.error).to.eql(null);",
+                  "    pm.expect(result.data).to.eql(true);",
+                  "});",
+                  "",
+                  "if (result.data === true) {",
+                  "    pm.collectionVariables.unset(\"userId\");",
+                  "    pm.collectionVariables.unset(\"accessToken\");",
+                  "    pm.collectionVariables.unset(\"accessTokenExpiresInSeconds\");",
+                  "    pm.collectionVariables.unset(\"refreshToken\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseURL}}/auth/delete-user",
+            "description": "Requires the saved bearer token. Deletes the local account and revokes Apple authorization when applicable."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "ToDo (anonymous example)",
+      "description": "Reference CRUD API intentionally left anonymous.",
+      "item": [
+        {
+          "name": "Get all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseURL}}/todo"
+          },
+          "response": []
+        },
+        {
+          "name": "Get by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseURL}}/todo/{{createdToDoId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Request succeeded\", () => pm.response.to.be.success);",
+                  "",
+                  "const result = pm.response.json();",
+                  "pm.test(\"ToDo was created\", () => {",
+                  "    pm.expect(result.error).to.eql(null);",
+                  "    pm.expect(result.data.id).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "if (result.data?.id) {",
+                  "    pm.collectionVariables.set(\"createdToDoId\", result.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"TODO Title\",\n  \"note\": \"TODO note\",\n  \"priority\": 1,\n  \"reminder\": \"2026-12-31T12:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/todo"
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{createdToDoId}}\",\n  \"title\": \"Edited title\",\n  \"note\": \"Edited note\",\n  \"priority\": 10,\n  \"reminder\": \"2027-01-15T12:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/todo"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Request succeeded\", () => pm.response.to.be.success);",
+                  "",
+                  "const result = pm.response.json();",
+                  "if (result.data === true) {",
+                  "    pm.collectionVariables.unset(\"createdToDoId\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseURL}}/todo/{{createdToDoId}}"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get(\"deviceId\")) {",
+          "    pm.collectionVariables.set(",
+          "        \"deviceId\",",
+          "        pm.variables.replaceIn(\"{{$guid}}\")",
+          "    );",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "deviceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "googleIdToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "appleIdToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "appleAuthorizationCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "accessTokenExpiresInSeconds",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdToDoId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

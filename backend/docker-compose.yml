@@ -1,0 +1,46 @@
+name: cctemplate
+
+services:
+  web:
+    image: ${DOCKER_REGISTRY-}web
+    container_name: web
+    build:
+      context: .
+      dockerfile: src/Web/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      seq:
+        condition: service_started
+    networks:
+      - cctemplate
+
+  db:
+    image: "postgres:16"
+    container_name: db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cctemplate"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    volumes:
+      - cctemplate-db-data:/var/lib/postgresql/data
+    networks:
+      - cctemplate
+
+  seq:
+    image: "datalust/seq:2026.1"
+    container_name: seq
+    volumes:
+      - cctemplate-seq-data:/data
+    networks:
+      - cctemplate
+
+volumes:
+  cctemplate-db-data:
+  cctemplate-seq-data:
+
+networks:
+  cctemplate:
+    driver: bridge

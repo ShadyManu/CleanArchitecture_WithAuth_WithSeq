@@ -1,0 +1,52 @@
+﻿# For more info on HTTP files go to https://aka.ms/vs/httpfile
+
+# Sample API test file for the Clean Architecture template
+# Use with Visual Studio, Rider, or VS Code REST Client
+
+@Web_HostAddress = http://localhost:5000
+# Put a valid ToDo Id here for testing
+@To_Do_Id = 
+
+# GET ToDos
+GET {{Web_HostAddress}}/api/todo
+
+###
+
+# GET ToDo by Id
+GET {{Web_HostAddress}}/api/todo/{{To_Do_Id}}
+
+###
+
+# POST ToDos
+POST {{Web_HostAddress}}/api/todo
+Content-Type: application/json
+
+// CreateTodoItemCommand
+{
+  "Title": "Eat a burrito 🌯",
+  "Priority": 2,
+  "Note": "This is a great idea!",
+  "Reminder": "2024-12-31T12:00:00Z"
+}
+
+###
+
+#PATCH ToDos UpdateToDo
+PATCH {{Web_HostAddress}}/api/todo
+Content-Type: application/json
+
+// UpdateTodoItemDetailCommand
+{
+  "Id": "{{To_Do_Id}}",
+  "Title": "Eat two burritos 🌯🌯",
+  "Priority": 3,
+  "Note": "This is a good idea!",
+  "Reminder": "2025-01-15T12:00:00Z"
+}
+
+###
+
+# DELETE TodoItem
+DELETE {{Web_HostAddress}}/api/todo/{{To_Do_Id}}
+
+###
